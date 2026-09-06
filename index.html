@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>語帳 — Catatan Kosakata Jepang</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1F2E40">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDE6D6;
+    --paper-deep:#E2D9C4;
+    --ink:#242229;
+    --ink-soft:#565169;
+    --indigo:#2E4057;
+    --indigo-deep:#1F2E40;
+    --gold:#C9A227;
+    --hanko:#A63D40;
+    --line:#c9bfa4;
+    --card:#F6F1E4;
+    --shadow: 0 2px 0 rgba(36,34,41,0.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at top left, rgba(46,64,87,0.05), transparent 55%),
+      var(--paper);
+    color:var(--ink);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:480px;
+    margin:0 auto;
+    padding:20px 16px 60px;
+    min-height:100vh;
+  }
+
+  /* header / hanko */
+  header{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:18px;
+  }
+  .hanko{
+    width:46px;height:46px;
+    border-radius:10px;
+    flex-shrink:0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    transform:rotate(-2deg);
+    display:block;
+  }
+  header h1{
+    font-family:'Noto Sans JP', sans-serif;
+    font-size:22px;
+    font-weight:700;
+    margin:0;
+    line-height:1.25;
+    color:var(--indigo-deep);
+  }
+  header p{
+    margin:2px 0 0;
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+
+  /* tabs styled as notebook index tabs */
+  .tabs{
+    display:flex;
+    gap:6px;
+    margin-bottom:16px;
+    border-bottom:2px solid var(--indigo-deep);
+  }
+  .tab{
+    flex:1;
+    padding:10px 8px 9px;
+    text-align:center;
+    background:var(--paper-deep);
+    border:2px solid var(--indigo-deep);
+    border-bottom:none;
+    border-radius:8px 8px 0 0;
+    font-weight:700;
+    font-size:14.5px;
+    color:var(--ink-soft);
+    cursor:pointer;
+    transform:translateY(3px);
+    transition:transform .15s ease, background .15s ease, color .15s ease;
+  }
+  .tab.active{
+    background:var(--paper);
+    color:var(--indigo-deep);
+    transform:translateY(0);
+  }
+  .tab .sub{
+    display:block;
+    font-family:'Noto Sans JP', sans-serif;
+    font-size:11px;
+    font-weight:500;
+    color:var(--gold);
+    margin-top:1px;
+  }
+
+  section{display:none;}
+  section.active{display:block;}
+
+  /* stats strip */
+  .stats{
+    display:flex;
+    justify-content:space-between;
+    background:var(--indigo-deep);
+    color:var(--paper);
+    border-radius:10px;
+    padding:12px 16px;
+    margin-bottom:16px;
+  }
+  .stats div{text-align:center;flex:1;}
+  .stats .num{
+    font-family:'Noto Sans JP', sans-serif;
+    font-size:20px;
+    font-weight:700;
+    color:var(--gold);
+    display:block;
+  }
+  .stats .lbl{font-size:11px;opacity:.85;}
+
+  /* add form */
+  .addbox{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px;
+    margin-bottom:18px;
+  }
+  .addbox h2{
+    font-family:'Noto Sans JP', sans-serif;
+    font-size:15px;
+    margin:0 0 10px;
+    color:var(--indigo-deep);
+  }
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .field{margin-bottom:8px;}
+  .field label{
+    display:block;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-bottom:3px;
+  }
+  input[type=text], textarea{
+    width:100%;
+    border:1.5px solid var(--line);
+    background:#fffdf8;
+    border-radius:6px;
+    padding:8px 9px;
+    font-size:14.5px;
+    font-family:inherit;
+    color:var(--ink);
+  }
+  input[type=text]:focus, textarea:focus{
+    outline:none;
+    border-color:var(--indigo);
+  }
+  textarea{resize:vertical;min-height:40px;}
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    border:none;
+    border-radius:7px;
+    padding:10px 16px;
+    font-family:inherit;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    transition:opacity .15s;
+  }
+  .btn:active{opacity:.75;}
+  .btn-primary{background:var(--indigo-deep);color:var(--paper);width:100%;margin-top:4px;}
+  .btn-ghost{background:transparent;color:var(--indigo-deep);border:1.5px solid var(--indigo-deep);}
+  .btn-danger{background:transparent;color:var(--hanko);border:1.5px solid var(--hanko);}
+  .btn-sm{padding:6px 10px;font-size:12.5px;}
+
+  /* search */
+  .searchrow{margin-bottom:12px;}
+  .searchrow input{background:#fffdf8;}
+
+  /* vocab cards (index card style) */
+  .vcard{
+    background:var(--card);
+    border:1px dashed var(--line);
+    border-radius:8px;
+    padding:12px 14px;
+    margin-bottom:10px;
+    position:relative;
+  }
+  .vcard .row1{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .vcard .kanji{
+    font-family:'Noto Sans JP', sans-serif;
+    font-size:22px;
+    font-weight:700;
+    color:var(--indigo-deep);
+  }
+  .vcard .hira{
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .vcard .romaji{
+    font-size:12.5px;
+    font-style:italic;
+    color:var(--gold);
+  }
+  .vcard .arti{
+    margin-top:4px;
+    font-size:14.5px;
+    font-weight:500;
+  }
+  .vcard .contoh{
+    margin-top:5px;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    border-left:2px solid var(--gold);
+    padding-left:8px;
+  }
+  .vcard .actions{
+    margin-top:9px;
+    display:flex;
+    gap:8px;
+  }
+  .empty{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:13.5px;
+    padding:30px 10px;
+    font-family:'Noto Sans JP', sans-serif;
+  }
+
+  /* flashcard mode */
+  .fc-stage{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:8px 0 4px;
+  }
+  .fc-progress{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-bottom:10px;
+  }
+  .flashcard{
+    width:100%;
+    min-height:200px;
+    background:var(--card);
+    border:2px solid var(--indigo-deep);
+    border-radius:14px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:24px 18px;
+    cursor:pointer;
+    position:relative;
+    box-shadow:0 4px 0 var(--indigo-deep);
+  }
+  .flashcard .facelabel{
+    position:absolute;
+    top:10px;
+    left:14px;
+    font-size:10.5px;
+    letter-spacing:.03em;
+    color:var(--gold);
+    font-weight:700;
+  }
+  .flashcard .main{
+    font-family:'Noto Sans JP', sans-serif;
+    font-size:34px;
+    font-weight:700;
+    color:var(--indigo-deep);
+  }
+  .flashcard .sub{
+    margin-top:8px;
+    font-size:14px;
+    color:var(--ink-soft);
+  }
+  .flashcard .contoh{
+    margin-top:14px;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    max-width:90%;
+  }
+  .flashcard .tap-hint{
+    position:absolute;
+    bottom:10px;
+    font-size:11px;
+    color:var(--ink-soft);
+    opacity:.7;
+  }
+  .fc-controls{
+    display:flex;
+    gap:10px;
+    margin-top:14px;
+    width:100%;
+  }
+  .fc-controls .btn{flex:1;}
+  .btn-know{background:var(--indigo-deep);color:var(--paper);}
+  .btn-again{background:transparent;border:1.5px solid var(--hanko);color:var(--hanko);}
+  .fc-toprow{
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  .fc-toprow select{
+    border:1.5px solid var(--line);
+    border-radius:6px;
+    padding:6px 8px;
+    font-family:inherit;
+    font-size:13px;
+    background:#fffdf8;
+    color:var(--ink);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <img class="hanko" src="icon-192.png" alt="Logo Kosakata Jepang">
+    <div>
+      <h1>Kosakata Jepang</h1>
+      <p>Catat, simpan, dan hafalkan — tersimpan otomatis di HP kamu</p>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="catatan" onclick="switchTab('catatan')">
+      Catatan
+      <span class="sub">ノート</span>
+    </div>
+    <div class="tab" data-tab="latihan" onclick="switchTab('latihan')">
+      Latihan
+      <span class="sub">練習</span>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div><span class="num" id="statTotal">0</span><span class="lbl">total kata</span></div>
+    <div><span class="num" id="statHafal">0</span><span class="lbl">sudah hafal</span></div>
+    <div><span class="num" id="statUlang">0</span><span class="lbl">perlu diulang</span></div>
+  </div>
+
+  <!-- CATATAN TAB -->
+  <section id="catatan" class="active">
+    <div class="addbox">
+      <h2>+ Tambah kosakata baru</h2>
+      <div class="grid2">
+        <div class="field">
+          <label>Kanji / Kana</label>
+          <input type="text" id="inKanji" placeholder="例：食べる">
+        </div>
+        <div class="field">
+          <label>Hiragana (cara baca)</label>
+          <input type="text" id="inHira" placeholder="たべる">
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Romaji</label>
+          <input type="text" id="inRomaji" placeholder="taberu">
+        </div>
+        <div class="field">
+          <label>Arti (Indonesia)</label>
+          <input type="text" id="inArti" placeholder="makan">
+        </div>
+      </div>
+      <div class="field">
+        <label>Contoh kalimat (opsional)</label>
+        <textarea id="inContoh" placeholder="毎日ご飯を食べる。 — Setiap hari makan nasi."></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="addWord()">Simpan kosakata</button>
+    </div>
+
+    <button class="btn btn-ghost" style="width:100%;margin-bottom:18px;" onclick="loadStarterPack()">📥 Muat starter pack (kosakata sehari-hari s.d. N4)</button>
+
+    <div class="searchrow">
+      <input type="text" id="searchBox" placeholder="Cari kanji, romaji, atau arti..." oninput="renderList()">
+    </div>
+
+    <div id="listArea"></div>
+  </section>
+
+  <!-- LATIHAN TAB -->
+  <section id="latihan">
+    <div class="fc-toprow">
+      <select id="fcMode">
+        <option value="kanji-arti">Tampilkan: Kanji → tebak arti</option>
+        <option value="arti-kanji">Tampilkan: Arti → tebak kanji</option>
+        <option value="hira-romaji">Tampilkan: Hiragana → tebak romaji</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="shuffleDeck()">Acak</button>
+    </div>
+    <div class="fc-stage">
+      <div class="fc-progress" id="fcProgress">0 / 0</div>
+      <div class="flashcard" id="flashcard" onclick="flipCard()">
+        <div class="facelabel" id="faceLabel">SOAL</div>
+        <div class="main" id="fcMain">—</div>
+        <div class="sub" id="fcSub"></div>
+        <div class="contoh" id="fcContoh"></div>
+        <div class="tap-hint">tap kartu untuk buka jawaban</div>
+      </div>
+      <div class="fc-controls">
+        <button class="btn btn-again" onclick="markCard(false)">Belum hafal</button>
+        <button class="btn btn-know" onclick="markCard(true)">Sudah hafal</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const STORAGE_KEY = 'kosakata_jepang_v1';
+let words = [];
+let deck = [];
+let deckPos = 0;
+let flipped = false;
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    words = raw ? JSON.parse(raw) : [];
+  }catch(e){ words = []; }
+}
+function save(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(words)); }
+  catch(e){ console.error('gagal menyimpan', e); }
+}
+
+function uid(){ return 'w'+Date.now()+Math.floor(Math.random()*1000); }
+
+function addWord(){
+  const kanji = document.getElementById('inKanji').value.trim();
+  const hira = document.getElementById('inHira').value.trim();
+  const romaji = document.getElementById('inRomaji').value.trim();
+  const arti = document.getElementById('inArti').value.trim();
+  const contoh = document.getElementById('inContoh').value.trim();
+
+  if(!kanji && !hira){
+    alert('Isi minimal kanji/kana atau hiragananya dulu ya.');
+    return;
+  }
+  if(!arti){
+    alert('Artinya jangan lupa diisi.');
+    return;
+  }
+
+  words.unshift({
+    id: uid(),
+    kanji, hira, romaji, arti, contoh,
+    status: 'baru' // baru | hafal | ulang
+  });
+  save();
+  ['inKanji','inHira','inRomaji','inArti','inContoh'].forEach(id=>document.getElementById(id).value='');
+  renderList();
+  updateStats();
+  rebuildDeck();
+}
+
+function deleteWord(id){
+  if(!confirm('Hapus kosakata ini?')) return;
+  words = words.filter(w=>w.id!==id);
+  save();
+  renderList();
+  updateStats();
+  rebuildDeck();
+}
+
+function renderList(){
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  const listArea = document.getElementById('listArea');
+  let filtered = words;
+  if(q){
+    filtered = words.filter(w =>
+      (w.kanji||'').toLowerCase().includes(q) ||
+      (w.hira||'').toLowerCase().includes(q) ||
+      (w.romaji||'').toLowerCase().includes(q) ||
+      (w.arti||'').toLowerCase().includes(q)
+    );
+  }
+  if(filtered.length === 0){
+    listArea.innerHTML = '<div class="empty">まだ何もない<br>Belum ada kosakata. Tambahkan di atas ☝️</div>';
+    return;
+  }
+  listArea.innerHTML = filtered.map(w => `
+    <div class="vcard">
+      <div class="row1">
+        <span class="kanji">${escapeHtml(w.kanji || w.hira || '?')}</span>
+        ${w.hira ? `<span class="hira">${escapeHtml(w.hira)}</span>` : ''}
+        ${w.romaji ? `<span class="romaji">${escapeHtml(w.romaji)}</span>` : ''}
+      </div>
+      <div class="arti">${escapeHtml(w.arti)}</div>
+      ${w.contoh ? `<div class="contoh">${escapeHtml(w.contoh)}</div>` : ''}
+      <div class="actions">
+        <button class="btn btn-danger btn-sm" onclick="deleteWord('${w.id}')">Hapus</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(str){
+  return (str||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function updateStats(){
+  document.getElementById('statTotal').textContent = words.length;
+  document.getElementById('statHafal').textContent = words.filter(w=>w.status==='hafal').length;
+  document.getElementById('statUlang').textContent = words.filter(w=>w.status==='ulang').length;
+}
+
+/* ---- tabs ---- */
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+  document.querySelectorAll('section').forEach(s=>s.classList.toggle('active', s.id===name));
+  if(name==='latihan'){ rebuildDeck(); }
+}
+
+/* ---- flashcards ---- */
+function rebuildDeck(){
+  deck = [...words];
+  deckPos = 0;
+  flipped = false;
+  showCard();
+}
+function shuffleDeck(){
+  for(let i=deck.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [deck[i],deck[j]] = [deck[j],deck[i]];
+  }
+  deckPos = 0;
+  flipped = false;
+  showCard();
+}
+document.getElementById('fcMode').addEventListener('change', ()=>{ flipped=false; showCard(); });
+
+function currentMode(){ return document.getElementById('fcMode').value; }
+
+function showCard(){
+  const total = deck.length;
+  document.getElementById('fcProgress').textContent = total===0 ? '0 / 0' : `${deckPos+1} / ${total}`;
+  const mainEl = document.getElementById('fcMain');
+  const subEl = document.getElementById('fcSub');
+  const contohEl = document.getElementById('fcContoh');
+  const labelEl = document.getElementById('faceLabel');
+
+  if(total===0){
+    mainEl.textContent = 'Belum ada kosakata';
+    subEl.textContent = 'Tambahkan dulu di tab Catatan';
+    contohEl.textContent = '';
+    labelEl.textContent = '';
+    return;
+  }
+  const w = deck[deckPos];
+  const mode = currentMode();
+  let front, frontSub, back, backSub;
+
+  if(mode==='kanji-arti'){
+    front = w.kanji || w.hira; frontSub = w.hira && w.kanji ? w.hira : '';
+    back = w.arti; backSub = w.romaji || '';
+  } else if(mode==='arti-kanji'){
+    front = w.arti; frontSub = '';
+    back = w.kanji || w.hira; backSub = w.hira && w.kanji ? w.hira : (w.romaji||'');
+  } else {
+    front = w.hira || w.kanji; frontSub = '';
+    back = w.romaji || w.arti; backSub = w.romaji ? w.arti : '';
+  }
+
+  if(!flipped){
+    labelEl.textContent = 'SOAL';
+    mainEl.textContent = front;
+    subEl.textContent = frontSub;
+    contohEl.textContent = '';
+  } else {
+    labelEl.textContent = 'JAWABAN';
+    mainEl.textContent = back;
+    subEl.textContent = backSub;
+    contohEl.textContent = w.contoh || '';
+  }
+}
+
+function flipCard(){
+  if(deck.length===0) return;
+  flipped = !flipped;
+  showCard();
+}
+
+function markCard(know){
+  if(deck.length===0) return;
+  const w = deck[deckPos];
+  const real = words.find(x=>x.id===w.id);
+  if(real) real.status = know ? 'hafal' : 'ulang';
+  save();
+  updateStats();
+
+  if(deckPos < deck.length-1){
+    deckPos++;
+  } else {
+    deckPos = 0;
+  }
+  flipped = false;
+  showCard();
+}
+
+/* ---- starter pack: kosakata umum sehari-hari s.d. N4 ---- */
+const STARTER_PACK = [
+  // sapaan dasar
+  ["","おはようございます","ohayou gozaimasu","selamat pagi",""],
+  ["","こんにちは","konnichiwa","selamat siang",""],
+  ["","こんばんは","konbanwa","selamat malam",""],
+  ["","ありがとう","arigatou","terima kasih",""],
+  ["","すみません","sumimasen","permisi / maaf",""],
+  ["","はい","hai","ya",""],
+  ["","いいえ","iie","tidak",""],
+  // waktu
+  ["今","いま","ima","sekarang",""],
+  ["今日","きょう","kyou","hari ini",""],
+  ["明日","あした","ashita","besok",""],
+  ["昨日","きのう","kinou","kemarin",""],
+  ["毎日","まいにち","mainichi","setiap hari",""],
+  ["朝","あさ","asa","pagi",""],
+  ["昼","ひる","hiru","siang",""],
+  ["夜","よる","yoru","malam",""],
+  ["週末","しゅうまつ","shuumatsu","akhir pekan",""],
+  ["時間","じかん","jikan","waktu",""],
+  // orang & keluarga
+  ["私","わたし","watashi","saya",""],
+  ["友達","ともだち","tomodachi","teman",""],
+  ["家族","かぞく","kazoku","keluarga",""],
+  ["父","ちち","chichi","ayah (saya)",""],
+  ["母","はは","haha","ibu (saya)",""],
+  ["兄","あに","ani","kakak laki-laki (saya)",""],
+  ["姉","あね","ane","kakak perempuan (saya)",""],
+  ["弟","おとうと","otouto","adik laki-laki",""],
+  ["妹","いもうと","imouto","adik perempuan",""],
+  ["子供","こども","kodomo","anak",""],
+  ["先生","せんせい","sensei","guru",""],
+  ["学生","がくせい","gakusei","murid / mahasiswa",""],
+  ["会社員","かいしゃいん","kaishain","karyawan perusahaan",""],
+  // tempat
+  ["家","いえ","ie","rumah",""],
+  ["学校","がっこう","gakkou","sekolah",""],
+  ["会社","かいしゃ","kaisha","perusahaan / kantor",""],
+  ["病院","びょういん","byouin","rumah sakit",""],
+  ["駅","えき","eki","stasiun",""],
+  ["店","みせ","mise","toko",""],
+  ["スーパー","すーぱー","suupaa","supermarket",""],
+  ["レストラン","れすとらん","resutoran","restoran",""],
+  ["公園","こうえん","kouen","taman",""],
+  ["図書館","としょかん","toshokan","perpustakaan",""],
+  ["銀行","ぎんこう","ginkou","bank",""],
+  ["郵便局","ゆうびんきょく","yuubinkyoku","kantor pos",""],
+  ["空港","くうこう","kuukou","bandara",""],
+  ["町","まち","machi","kota / lingkungan",""],
+  // benda sehari-hari
+  ["本","ほん","hon","buku",""],
+  ["車","くるま","kuruma","mobil",""],
+  ["電車","でんしゃ","densha","kereta",""],
+  ["自転車","じてんしゃ","jitensha","sepeda",""],
+  ["携帯電話","けいたいでんわ","keitai denwa","handphone",""],
+  ["お金","おかね","okane","uang",""],
+  ["時計","とけい","tokei","jam",""],
+  ["傘","かさ","kasa","payung",""],
+  ["服","ふく","fuku","baju",""],
+  ["靴","くつ","kutsu","sepatu",""],
+  ["鞄","かばん","kaban","tas",""],
+  ["机","つくえ","tsukue","meja",""],
+  ["椅子","いす","isu","kursi",""],
+  ["部屋","へや","heya","kamar",""],
+  ["窓","まど","mado","jendela",""],
+  // makanan & minuman
+  ["食べ物","たべもの","tabemono","makanan",""],
+  ["飲み物","のみもの","nomimono","minuman",""],
+  ["ご飯","ごはん","gohan","nasi / makanan",""],
+  ["水","みず","mizu","air",""],
+  ["お茶","おちゃ","ocha","teh",""],
+  ["肉","にく","niku","daging",""],
+  ["魚","さかな","sakana","ikan",""],
+  ["野菜","やさい","yasai","sayur",""],
+  ["果物","くだもの","kudamono","buah",""],
+  ["卵","たまご","tamago","telur",""],
+  // kata kerja (bentuk kamus)
+  ["食べる","たべる","taberu","makan",""],
+  ["飲む","のむ","nomu","minum",""],
+  ["見る","みる","miru","melihat / menonton",""],
+  ["聞く","きく","kiku","mendengar / bertanya",""],
+  ["話す","はなす","hanasu","berbicara",""],
+  ["読む","よむ","yomu","membaca",""],
+  ["書く","かく","kaku","menulis",""],
+  ["行く","いく","iku","pergi",""],
+  ["来る","くる","kuru","datang",""],
+  ["帰る","かえる","kaeru","pulang",""],
+  ["買う","かう","kau","membeli",""],
+  ["売る","うる","uru","menjual",""],
+  ["作る","つくる","tsukuru","membuat",""],
+  ["使う","つかう","tsukau","menggunakan",""],
+  ["待つ","まつ","matsu","menunggu",""],
+  ["会う","あう","au","bertemu",""],
+  ["分かる","わかる","wakaru","mengerti",""],
+  ["知る","しる","shiru","tahu / mengenal",""],
+  ["起きる","おきる","okiru","bangun tidur",""],
+  ["寝る","ねる","neru","tidur",""],
+  ["働く","はたらく","hataraku","bekerja",""],
+  ["休む","やすむ","yasumu","istirahat",""],
+  ["勉強する","べんきょうする","benkyou suru","belajar",""],
+  ["練習する","れんしゅうする","renshuu suru","berlatih",""],
+  ["手伝う","てつだう","tetsudau","membantu",""],
+  ["教える","おしえる","oshieru","mengajar",""],
+  ["習う","ならう","narau","belajar (dari orang)",""],
+  ["遊ぶ","あそぶ","asobu","bermain",""],
+  ["泳ぐ","およぐ","oyogu","berenang",""],
+  ["走る","はしる","hashiru","berlari",""],
+  ["歩く","あるく","aruku","berjalan kaki",""],
+  ["乗る","のる","noru","naik (kendaraan)",""],
+  ["降りる","おりる","oriru","turun (dari kendaraan)",""],
+  ["開ける","あける","akeru","membuka",""],
+  ["閉める","しめる","shimeru","menutup",""],
+  ["送る","おくる","okuru","mengirim",""],
+  ["貸す","かす","kasu","meminjamkan",""],
+  ["借りる","かりる","kariru","meminjam",""],
+  ["忘れる","わすれる","wasureru","lupa",""],
+  ["覚える","おぼえる","oboeru","mengingat / menghafal",""],
+  ["掃除する","そうじする","souji suru","membersihkan",""],
+  ["洗う","あらう","arau","mencuci",""],
+  ["座る","すわる","suwaru","duduk",""],
+  ["立つ","たつ","tatsu","berdiri",""],
+  ["住む","すむ","sumu","tinggal (di suatu tempat)",""],
+  ["思う","おもう","omou","berpikir",""],
+  ["言う","いう","iu","berkata",""],
+  ["出る","でる","deru","keluar",""],
+  ["入る","はいる","hairu","masuk",""],
+  ["始まる","はじまる","hajimaru","dimulai",""],
+  ["終わる","おわる","owaru","berakhir",""],
+  // kata sifat
+  ["大きい","おおきい","ookii","besar",""],
+  ["小さい","ちいさい","chiisai","kecil",""],
+  ["新しい","あたらしい","atarashii","baru",""],
+  ["古い","ふるい","furui","lama / tua",""],
+  ["高い","たかい","takai","tinggi / mahal",""],
+  ["安い","やすい","yasui","murah",""],
+  ["いい","いい","ii","bagus",""],
+  ["悪い","わるい","warui","buruk",""],
+  ["暑い","あつい","atsui","panas (cuaca)",""],
+  ["寒い","さむい","samui","dingin (cuaca)",""],
+  ["忙しい","いそがしい","isogashii","sibuk",""],
+  ["楽しい","たのしい","tanoshii","menyenangkan",""],
+  ["難しい","むずかしい","muzukashii","sulit",""],
+  ["簡単な","かんたんな","kantan na","mudah",""],
+  ["元気な","げんきな","genki na","sehat / semangat",""],
+  ["好きな","すきな","suki na","suka",""],
+  ["嫌いな","きらいな","kirai na","tidak suka",""],
+  ["きれいな","きれいな","kirei na","cantik / bersih",""],
+  ["静かな","しずかな","shizuka na","tenang",""],
+  ["にぎやかな","にぎやかな","nigiyaka na","ramai",""],
+  // kata keterangan & lainnya
+  ["","とても","totemo","sangat",""],
+  ["少し","すこし","sukoshi","sedikit",""],
+  ["","たくさん","takusan","banyak",""],
+  ["","もう","mou","sudah",""],
+  ["","まだ","mada","masih / belum",""],
+  ["一緒に","いっしょに","issho ni","bersama-sama",""],
+  ["全部","ぜんぶ","zenbu","semua",""],
+  ["全然","ぜんぜん","zenzen","sama sekali (+negatif)",""]
+];
+
+function loadStarterPack(){
+  const existingKeys = new Set(words.map(w => (w.kanji||w.hira) + '|' + w.arti));
+  let added = 0;
+  const toAdd = [];
+  STARTER_PACK.forEach(([kanji,hira,romaji,arti,contoh]) => {
+    const key = (kanji||hira) + '|' + arti;
+    if(!existingKeys.has(key)){
+      toAdd.push({ id: uid(), kanji, hira, romaji, arti, contoh, status:'baru' });
+      existingKeys.add(key);
+      added++;
+    }
+  });
+  if(added === 0){
+    alert('Starter pack sudah pernah dimuat semua, gak ada yang baru ditambahkan.');
+    return;
+  }
+  if(!confirm(`Tambahkan ${added} kosakata dasar (sehari-hari s.d. N4) ke catatan kamu?`)) return;
+  words = [...toAdd, ...words];
+  save();
+  renderList();
+  updateStats();
+  rebuildDeck();
+  alert(`${added} kosakata berhasil ditambahkan!`);
+}
+
+/* ---- init ---- */
+load();
+renderList();
+updateStats();
+rebuildDeck();
+</script>
+</body>
+</html>
