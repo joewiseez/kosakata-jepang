@@ -393,7 +393,8 @@
       <button class="btn btn-primary" onclick="addWord()">Simpan kosakata</button>
     </div>
 
-    <button class="btn btn-ghost" style="width:100%;margin-bottom:18px;" onclick="loadStarterPack()">📥 Muat starter pack (kosakata sehari-hari s.d. N4)</button>
+    <button class="btn btn-ghost" style="width:100%;margin-bottom:8px;" onclick="loadStarterPack(STARTER_PACK)">📥 Muat starter pack 1 (kosakata sehari-hari s.d. N4)</button>
+    <button class="btn btn-ghost" style="width:100%;margin-bottom:18px;" onclick="loadStarterPack(STARTER_PACK_2)">📥 Muat starter pack 2 (+200 kosakata baru)</button>
 
     <div class="searchrow">
       <input type="text" id="searchBox" placeholder="Cari kanji, romaji, atau arti..." oninput="renderList()">
@@ -793,8 +794,8 @@ const STARTER_PACK = [
   ["病院","びょういん","byouin","rumah sakit",""],
   ["駅","えき","eki","stasiun",""],
   ["店","みせ","mise","toko",""],
-  ["スーパー","すーぱー","suupaa","supermarket",""],
-  ["レストラン","れすとらん","resutoran","restoran",""],
+  ["","スーパー","suupaa","supermarket",""],
+  ["","レストラン","resutoran","restoran",""],
   ["公園","こうえん","kouen","taman",""],
   ["図書館","としょかん","toshokan","perpustakaan",""],
   ["銀行","ぎんこう","ginkou","bank",""],
@@ -912,11 +913,239 @@ const STARTER_PACK = [
   ["全然","ぜんぜん","zenzen","sama sekali (+negatif)",""]
 ];
 
-function loadStarterPack(){
+/* ---- starter pack 2: +200 kosakata baru (warna, cuaca, tubuh, kesehatan, transportasi, belanja, hobi, emosi, dll) ---- */
+const STARTER_PACK_2 = [
+  // warna
+  ["赤","あか","aka","merah",""],
+  ["青","あお","ao","biru",""],
+  ["黄色","きいろ","kiiro","kuning",""],
+  ["緑","みどり","midori","hijau",""],
+  ["黒","くろ","kuro","hitam",""],
+  ["白","しろ","shiro","putih",""],
+  ["茶色","ちゃいろ","chairo","coklat",""],
+  ["灰色","はいいろ","haiiro","abu-abu",""],
+  ["","ピンク","pinku","pink",""],
+  ["紫","むらさき","murasaki","ungu",""],
+  // cuaca & musim
+  ["天気","てんき","tenki","cuaca",""],
+  ["雨","あめ","ame","hujan",""],
+  ["雪","ゆき","yuki","salju",""],
+  ["風","かぜ","kaze","angin",""],
+  ["晴れ","はれ","hare","cerah",""],
+  ["曇り","くもり","kumori","mendung",""],
+  ["台風","たいふう","taifuu","topan",""],
+  ["春","はる","haru","musim semi",""],
+  ["夏","なつ","natsu","musim panas",""],
+  ["秋","あき","aki","musim gugur",""],
+  ["冬","ふゆ","fuyu","musim dingin",""],
+  // bagian tubuh
+  ["頭","あたま","atama","kepala",""],
+  ["顔","かお","kao","wajah",""],
+  ["目","め","me","mata",""],
+  ["耳","みみ","mimi","telinga",""],
+  ["鼻","はな","hana","hidung",""],
+  ["口","くち","kuchi","mulut",""],
+  ["歯","は","ha","gigi",""],
+  ["手","て","te","tangan",""],
+  ["指","ゆび","yubi","jari",""],
+  ["足","あし","ashi","kaki",""],
+  ["お腹","おなか","onaka","perut",""],
+  ["背中","せなか","senaka","punggung",""],
+  ["髪","かみ","kami","rambut",""],
+  ["喉","のど","nodo","tenggorokan",""],
+  ["心臓","しんぞう","shinzou","jantung",""],
+  // kesehatan
+  ["病気","びょうき","byouki","sakit / penyakit",""],
+  ["熱","ねつ","netsu","demam",""],
+  ["風邪","かぜ","kaze","masuk angin / flu",""],
+  ["薬","くすり","kusuri","obat",""],
+  ["痛い","いたい","itai","sakit (nyeri)",""],
+  ["医者","いしゃ","isha","dokter",""],
+  ["歯医者","はいしゃ","haisha","dokter gigi",""],
+  ["看護師","かんごし","kangoshi","perawat",""],
+  // transportasi
+  ["","バス","basu","bus",""],
+  ["","タクシー","takushii","taksi",""],
+  ["飛行機","ひこうき","hikouki","pesawat",""],
+  ["船","ふね","fune","kapal",""],
+  ["道","みち","michi","jalan",""],
+  ["橋","はし","hashi","jembatan",""],
+  ["信号","しんごう","shingou","lampu lalu lintas",""],
+  ["交差点","こうさてん","kousaten","persimpangan",""],
+  ["切符","きっぷ","kippu","tiket",""],
+  ["運転する","うんてんする","unten suru","menyetir / mengemudi",""],
+  // belanja & uang
+  ["値段","ねだん","nedan","harga",""],
+  ["","レジ","reji","kasir",""],
+  ["財布","さいふ","saifu","dompet",""],
+  ["現金","げんきん","genkin","uang tunai",""],
+  ["","カード","kaado","kartu",""],
+  ["おつり","おつり","otsuri","kembalian",""],
+  ["割引","わりびき","waribiki","diskon",""],
+  ["買い物","かいもの","kaimono","belanja",""],
+  ["店員","てんいん","tenin","pegawai toko",""],
+  ["","レシート","reshiito","struk belanja",""],
+  // hobi & olahraga
+  ["音楽","おんがく","ongaku","musik",""],
+  ["映画","えいが","eiga","film",""],
+  ["写真","しゃしん","shashin","foto",""],
+  ["絵","え","e","gambar / lukisan",""],
+  ["歌","うた","uta","lagu",""],
+  ["歌う","うたう","utau","menyanyi",""],
+  ["踊る","おどる","odoru","menari",""],
+  ["","スポーツ","supootsu","olahraga",""],
+  ["","サッカー","sakkaa","sepak bola",""],
+  ["野球","やきゅう","yakyuu","baseball",""],
+  ["","テニス","tenisu","tenis",""],
+  ["","ゲーム","geemu","permainan / game",""],
+  // emosi
+  ["嬉しい","うれしい","ureshii","senang / gembira",""],
+  ["悲しい","かなしい","kanashii","sedih",""],
+  ["怒る","おこる","okoru","marah",""],
+  ["怖い","こわい","kowai","takut / menyeramkan",""],
+  ["驚く","おどろく","odoroku","terkejut",""],
+  ["心配する","しんぱいする","shinpai suru","khawatir",""],
+  ["安心する","あんしんする","anshin suru","lega / tenang",""],
+  ["恥ずかしい","はずかしい","hazukashii","malu",""],
+  ["寂しい","さびしい","sabishii","kesepian",""],
+  ["不安な","ふあんな","fuan na","cemas",""],
+  ["うるさい","うるさい","urusai","berisik",""],
+  ["かわいい","かわいい","kawaii","imut / lucu",""],
+  // kata tanya & konjungsi
+  ["何","なに","nani","apa",""],
+  ["誰","だれ","dare","siapa",""],
+  ["","どこ","doko","di mana",""],
+  ["","いつ","itsu","kapan",""],
+  ["","どうして","doushite","kenapa",""],
+  ["","どうやって","douyatte","bagaimana caranya",""],
+  ["","どちら","dochira","yang mana (sopan)",""],
+  ["","それで","sorede","lalu / kemudian",""],
+  ["","だから","dakara","jadi / karena itu",""],
+  ["","でも","demo","tapi",""],
+  ["","そして","soshite","dan kemudian",""],
+  ["","または","matawa","atau",""],
+  // sekolah & kerja
+  ["授業","じゅぎょう","jugyou","pelajaran / kelas",""],
+  ["宿題","しゅくだい","shukudai","PR",""],
+  ["試験","しけん","shiken","ujian",""],
+  ["問題","もんだい","mondai","soal / masalah",""],
+  ["答え","こたえ","kotae","jawaban",""],
+  ["質問","しつもん","shitsumon","pertanyaan",""],
+  ["会議","かいぎ","kaigi","rapat",""],
+  ["仕事","しごと","shigoto","pekerjaan",""],
+  ["給料","きゅうりょう","kyuuryou","gaji",""],
+  ["休暇","きゅうか","kyuuka","cuti / libur",""],
+  ["同僚","どうりょう","douryou","rekan kerja",""],
+  ["上司","じょうし","joushi","atasan",""],
+  // teknologi
+  ["","コンピューター","konpyuutaa","komputer",""],
+  ["","インターネット","intaanetto","internet",""],
+  ["充電する","じゅうでんする","juuden suru","mengecas",""],
+  ["","アプリ","apuri","aplikasi",""],
+  ["","パスワード","pasuwaado","kata sandi",""],
+  ["画面","がめん","gamen","layar",""],
+  ["壊れる","こわれる","kowareru","rusak",""],
+  ["直す","なおす","naosu","memperbaiki",""],
+  ["","ダウンロード","daunroodo","unduhan / download",""],
+  // pakaian & aksesoris tambahan
+  ["帽子","ぼうし","boushi","topi",""],
+  ["眼鏡","めがね","megane","kacamata",""],
+  ["指輪","ゆびわ","yubiwa","cincin",""],
+  ["","ネクタイ","nekutai","dasi",""],
+  ["","セーター","seetaa","sweater",""],
+  ["","スカート","sukaato","rok",""],
+  ["","ズボン","zubon","celana panjang",""],
+  ["","サイズ","saizu","ukuran",""],
+  // arah & posisi
+  ["右","みぎ","migi","kanan",""],
+  ["左","ひだり","hidari","kiri",""],
+  ["上","うえ","ue","atas",""],
+  ["下","した","shita","bawah",""],
+  ["前","まえ","mae","depan",""],
+  ["後ろ","うしろ","ushiro","belakang",""],
+  ["中","なか","naka","dalam / tengah",""],
+  ["外","そと","soto","luar",""],
+  ["近い","ちかい","chikai","dekat",""],
+  ["遠い","とおい","tooi","jauh",""],
+  // kata kerja tambahan
+  ["探す","さがす","sagasu","mencari",""],
+  ["見つける","みつける","mitsukeru","menemukan",""],
+  ["決める","きめる","kimeru","memutuskan",""],
+  ["続ける","つづける","tsuzukeru","melanjutkan",""],
+  ["止める","とめる","tomeru","menghentikan",""],
+  ["変える","かえる","kaeru","mengubah",""],
+  ["壊す","こわす","kowasu","merusak",""],
+  ["片付ける","かたづける","katazukeru","membereskan",""],
+  ["準備する","じゅんびする","junbi suru","mempersiapkan",""],
+  ["確認する","かくにんする","kakunin suru","memastikan / mengecek",""],
+  ["説明する","せつめいする","setsumei suru","menjelaskan",""],
+  ["比べる","くらべる","kuraberu","membandingkan",""],
+  ["選ぶ","えらぶ","erabu","memilih",""],
+  ["遅れる","おくれる","okureru","terlambat",""],
+  ["急ぐ","いそぐ","isogu","buru-buru",""],
+  // kata sifat tambahan
+  ["明るい","あかるい","akarui","terang / ceria",""],
+  ["暗い","くらい","kurai","gelap",""],
+  ["重い","おもい","omoi","berat",""],
+  ["軽い","かるい","karui","ringan",""],
+  ["強い","つよい","tsuyoi","kuat",""],
+  ["弱い","よわい","yowai","lemah",""],
+  ["早い","はやい","hayai","cepat / pagi-pagi",""],
+  ["遅い","おそい","osoi","lambat / terlambat",""],
+  ["柔らかい","やわらかい","yawarakai","lembut",""],
+  ["硬い","かたい","katai","keras",""],
+  ["甘い","あまい","amai","manis",""],
+  ["辛い","からい","karai","pedas",""],
+  // makanan tambahan
+  ["朝ご飯","あさごはん","asagohan","sarapan",""],
+  ["昼ご飯","ひるごはん","hirugohan","makan siang",""],
+  ["晩ご飯","ばんごはん","bangohan","makan malam",""],
+  ["お菓子","おかし","okashi","camilan / kue",""],
+  ["","ラーメン","raamen","ramen",""],
+  ["寿司","すし","sushi","sushi",""],
+  ["味噌汁","みそしる","misoshiru","sup miso",""],
+  ["醤油","しょうゆ","shouyu","kecap asin",""],
+  ["砂糖","さとう","satou","gula",""],
+  ["塩","しお","shio","garam",""],
+  ["油","あぶら","abura","minyak",""],
+  // keluarga tambahan
+  ["祖父","そふ","sofu","kakek",""],
+  ["祖母","そぼ","sobo","nenek",""],
+  ["夫","おっと","otto","suami",""],
+  ["妻","つま","tsuma","istri",""],
+  ["彼氏","かれし","kareshi","pacar (laki-laki)",""],
+  ["彼女","かのじょ","kanojo","pacar (perempuan) / dia (perempuan)",""],
+  ["赤ちゃん","あかちゃん","akachan","bayi",""],
+  ["親","おや","oya","orang tua",""],
+  // tempat tambahan
+  ["美容院","びよういん","biyouin","salon",""],
+  ["映画館","えいがかん","eigakan","bioskop",""],
+  ["神社","じんじゃ","jinja","kuil Shinto",""],
+  ["お寺","おてら","otera","kuil Buddha",""],
+  ["市役所","しやくしょ","shiyakusho","kantor/balai kota",""],
+  ["警察署","けいさつしょ","keisatsusho","kantor polisi",""],
+  ["大学","だいがく","daigaku","universitas",""],
+  ["教室","きょうしつ","kyoushitsu","ruang kelas",""],
+  ["体育館","たいいくかん","taiikukan","gedung olahraga",""],
+  // waktu tambahan
+  ["先週","せんしゅう","senshuu","minggu lalu",""],
+  ["来週","らいしゅう","raishuu","minggu depan",""],
+  ["今週","こんしゅう","konshuu","minggu ini",""],
+  ["先月","せんげつ","sengetsu","bulan lalu",""],
+  ["来月","らいげつ","raigetsu","bulan depan",""],
+  ["今月","こんげつ","kongetsu","bulan ini",""],
+  ["去年","きょねん","kyonen","tahun lalu",""],
+  ["来年","らいねん","rainen","tahun depan",""],
+  ["今年","ことし","kotoshi","tahun ini",""],
+  ["午前","ごぜん","gozen","pagi (AM)",""],
+  ["午後","ごご","gogo","siang / sore (PM)",""]
+];
+
+function loadStarterPack(pack){
   const existingKeys = new Set(words.map(w => (w.kanji||w.hira) + '|' + w.arti));
   let added = 0;
   const toAdd = [];
-  STARTER_PACK.forEach(([kanji,hira,romaji,arti,contoh]) => {
+  pack.forEach(([kanji,hira,romaji,arti,contoh]) => {
     const key = (kanji||hira) + '|' + arti;
     if(!existingKeys.has(key)){
       toAdd.push({ id: uid(), kanji, hira, romaji, arti, contoh, status:'baru' });
@@ -925,10 +1154,10 @@ function loadStarterPack(){
     }
   });
   if(added === 0){
-    alert('Starter pack sudah pernah dimuat semua, gak ada yang baru ditambahkan.');
+    alert('Semua kosakata di paket ini sudah pernah dimuat, gak ada yang baru ditambahkan.');
     return;
   }
-  if(!confirm(`Tambahkan ${added} kosakata dasar (sehari-hari s.d. N4) ke catatan kamu?`)) return;
+  if(!confirm(`Tambahkan ${added} kosakata baru ke catatan kamu?`)) return;
   words = [...toAdd, ...words];
   save();
   renderList();
@@ -937,11 +1166,32 @@ function loadStarterPack(){
   alert(`${added} kosakata berhasil ditambahkan!`);
 }
 
+/* ---- perbaikan data: kata katakana (kata serapan) jangan sampai kesimpen sebagai hiragana ---- */
+function isKatakana(str){
+  return !!str && /^[\u30A0-\u30FFー]+$/.test(str);
+}
+function fixKatakanaEntries(){
+  let changed = false;
+  words.forEach(w => {
+    if(isKatakana(w.kanji)){
+      // ini kata serapan (katakana), bukan kanji beneran -> pindahkan ke field hira apa adanya
+      if(w.hira !== w.kanji){
+        w.hira = w.kanji;
+        w.kanji = '';
+        changed = true;
+      }
+    }
+  });
+  if(changed) save();
+}
+
 /* ---- init ---- */
 load();
+fixKatakanaEntries();
 renderList();
 updateStats();
 rebuildDeck();
+
 </script>
 </body>
 </html>
