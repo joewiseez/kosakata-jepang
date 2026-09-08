@@ -404,60 +404,33 @@
 
   <!-- LATIHAN TAB -->
   <section id="latihan">
-    <div class="fc-toprow">
-      <select id="exMode" onchange="onExModeChange()">
-        <option value="flashcard">Mode: Flashcard</option>
-        <option value="typing">Mode: Ketik jawaban</option>
-      </select>
+    <div class="fc-toprow" style="justify-content:flex-end;">
       <button class="btn btn-ghost btn-sm" onclick="shuffleDeck()">Acak</button>
-    </div>
-
-    <div class="fc-toprow" id="flashcardModeRow">
-      <select id="fcMode">
-        <option value="kanji-arti">Tampilkan: Kanji → tebak arti</option>
-        <option value="arti-kanji">Tampilkan: Arti → tebak kanji</option>
-        <option value="hira-romaji">Tampilkan: Hiragana → tebak romaji</option>
-      </select>
-    </div>
-    <div class="fc-toprow" id="typingModeRow" style="display:none;">
-      <select id="typeMode">
-        <option value="hira-arti">Tampilkan: Hiragana → ketik arti (Indonesia)</option>
-        <option value="arti-hira">Tampilkan: Arti → ketik hiragana</option>
-      </select>
     </div>
 
     <div class="fc-stage">
       <div class="fc-progress" id="fcProgress">0 / 0</div>
 
-      <!-- flashcard view -->
-      <div id="flashcardView">
-        <div class="flashcard" id="flashcard" onclick="flipCard()">
-          <div class="facelabel" id="faceLabel">SOAL</div>
-          <div class="main" id="fcMain">—</div>
-          <div class="sub" id="fcSub"></div>
-          <div class="contoh" id="fcContoh"></div>
-          <div class="tap-hint">tap kartu untuk buka jawaban</div>
-        </div>
-        <div class="fc-controls">
-          <button class="btn btn-again" onclick="markCard(false)">Belum hafal</button>
-          <button class="btn btn-know" onclick="markCard(true)">Sudah hafal</button>
-        </div>
+      <div class="flashcard" id="flashcard">
+        <div class="facelabel" id="faceLabel">SOAL</div>
+        <div class="main" id="fcMain">—</div>
+        <div class="sub" id="fcSub"></div>
+        <div class="contoh" id="fcContoh"></div>
+        <div class="tap-hint" id="tapHint">tap kartu untuk buka jawaban</div>
       </div>
 
-      <!-- typing view -->
-      <div id="typingView" style="display:none; width:100%;">
-        <div class="flashcard" style="cursor:default;">
-          <div class="facelabel">SOAL</div>
-          <div class="main" id="typeMain">—</div>
-          <div class="sub" id="typeSub"></div>
-        </div>
-        <div class="field" style="margin-top:12px;">
-          <input type="text" id="typeInput" placeholder="Ketik jawaban di sini..." autocomplete="off" autocapitalize="off">
-        </div>
-        <button class="btn btn-primary" id="typeCheckBtn" onclick="checkTyping()">Cek jawaban</button>
-        <div id="typeFeedback" style="margin-top:10px; font-size:14px; text-align:center;"></div>
-        <button class="btn btn-ghost" id="typeNextBtn" style="width:100%;margin-top:8px;display:none;" onclick="nextTyping()">Lanjut →</button>
+      <div id="typingArea" style="display:none; width:100%; margin-top:12px;">
+        <input type="text" id="typeInput" placeholder="Ketik dalam romaji..." autocomplete="off" autocapitalize="off">
       </div>
+
+      <div id="typeFeedback" style="margin-top:10px; font-size:14px; text-align:center; width:100%;"></div>
+
+      <div class="fc-controls" id="fcControls">
+        <button class="btn btn-again" onclick="markCard(false)">Belum hafal</button>
+        <button class="btn btn-know" onclick="markCard(true)">Sudah hafal</button>
+      </div>
+      <button class="btn btn-primary" id="checkBtn" style="display:none;width:100%;margin-top:4px;" onclick="checkTyping()">Cek jawaban</button>
+      <button class="btn btn-ghost" id="nextBtn" style="display:none;width:100%;margin-top:8px;" onclick="goNext()">Lanjut →</button>
     </div>
   </section>
 
@@ -570,34 +543,25 @@ function switchTab(name){
   if(name==='latihan'){ rebuildDeck(); }
 }
 
-/* ---- exercises (flashcard + typing) ---- */
-function currentExMode(){ return document.getElementById('exMode').value; }
-function currentTypeMode(){ return document.getElementById('typeMode').value; }
-function currentMode(){ return document.getElementById('fcMode').value; }
+/* ---- latihan: acak antara flashcard & ketik romaji ---- */
+let currentType = 'flashcard'; // 'flashcard' | 'typing'
+let lastTypingCorrect = false;
 
-function onExModeChange(){
-  const ex = currentExMode();
-  document.getElementById('flashcardModeRow').style.display = ex==='flashcard' ? 'flex' : 'none';
-  document.getElementById('typingModeRow').style.display = ex==='typing' ? 'flex' : 'none';
-  document.getElementById('flashcardView').style.display = ex==='flashcard' ? 'block' : 'none';
-  document.getElementById('typingView').style.display = ex==='typing' ? 'block' : 'none';
-  rebuildDeck();
-}
-
-function renderCurrent(){
-  if(currentExMode()==='flashcard') showCard(); else showTypingCard();
+function pickType(w){
+  if(!w) return 'flashcard';
+  const types = ['flashcard'];
+  if(w.romaji) types.push('typing-romaji');
+  if(w.hira && w.arti) types.push('typing-hira');
+  return types[Math.floor(Math.random()*types.length)];
 }
 
 function rebuildDeck(){
-  // kosakata yang sudah ditandai "hafal" tidak dimunculkan lagi di latihan
-  let pool = words.filter(w => w.status !== 'hafal');
-  if(currentExMode()==='typing'){
-    pool = pool.filter(w => w.hira && w.arti); // butuh kedua field ini buat mode ketik
-  }
-  deck = pool;
+  // kosakata yang sudah ditandai "hafal" tidak dimunculkan lagi
+  deck = words.filter(w => w.status !== 'hafal');
   deckPos = 0;
   flipped = false;
-  renderCurrent();
+  currentType = deck.length ? pickType(deck[0]) : 'flashcard';
+  showCard();
 }
 function shuffleDeck(){
   for(let i=deck.length-1;i>0;i--){
@@ -606,12 +570,11 @@ function shuffleDeck(){
   }
   deckPos = 0;
   flipped = false;
-  renderCurrent();
+  currentType = deck.length ? pickType(deck[0]) : 'flashcard';
+  showCard();
 }
-document.getElementById('fcMode').addEventListener('change', ()=>{ flipped=false; showCard(); });
-document.getElementById('typeMode').addEventListener('change', rebuildDeck);
 
-/* advance deck; if removeCurrent=true (kata baru saja ditandai hafal), kata itu dibuang dari deck */
+/* pindah ke kartu berikutnya. removeCurrent=true kalau kata barusan ditandai hafal (dibuang dari antrian) */
 function advanceDeck(removeCurrent){
   if(removeCurrent){
     deck.splice(deckPos,1);
@@ -620,58 +583,96 @@ function advanceDeck(removeCurrent){
     deckPos = (deckPos < deck.length-1) ? deckPos+1 : 0;
   }
   flipped = false;
+  currentType = deck.length ? pickType(deck[deckPos]) : 'flashcard';
 }
 
 function showCard(){
   const total = deck.length;
   document.getElementById('fcProgress').textContent = total===0 ? '0 / 0' : `${deckPos+1} / ${total}`;
+
   const mainEl = document.getElementById('fcMain');
   const subEl = document.getElementById('fcSub');
   const contohEl = document.getElementById('fcContoh');
   const labelEl = document.getElementById('faceLabel');
+  const tapHint = document.getElementById('tapHint');
+  const typingArea = document.getElementById('typingArea');
+  const typeInput = document.getElementById('typeInput');
+  const feedbackEl = document.getElementById('typeFeedback');
+  const fcControls = document.getElementById('fcControls');
+  const checkBtn = document.getElementById('checkBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const flashcardEl = document.getElementById('flashcard');
+
+  feedbackEl.innerHTML = '';
+  nextBtn.style.display = 'none';
 
   if(words.length===0){
     mainEl.textContent = 'Belum ada kosakata';
     subEl.textContent = 'Tambahkan dulu di tab Catatan';
     contohEl.textContent = ''; labelEl.textContent = '';
+    tapHint.style.display = 'none'; typingArea.style.display = 'none';
+    fcControls.style.display = 'none'; checkBtn.style.display = 'none';
+    flashcardEl.onclick = null; flashcardEl.style.cursor = 'default';
     return;
   }
   if(total===0){
     mainEl.textContent = 'Semua kosakata sudah dihafal! 🎉';
     subEl.textContent = 'Tambah kosakata baru di tab Catatan untuk lanjut latihan';
     contohEl.textContent = ''; labelEl.textContent = '';
+    tapHint.style.display = 'none'; typingArea.style.display = 'none';
+    fcControls.style.display = 'none'; checkBtn.style.display = 'none';
+    flashcardEl.onclick = null; flashcardEl.style.cursor = 'default';
     return;
   }
+
   const w = deck[deckPos];
-  const mode = currentMode();
-  let front, frontSub, back, backSub;
+  const isHiraMode = (currentType === 'typing-hira');
+  const front = isHiraMode ? w.arti : (w.kanji || w.hira);
+  const frontSub = isHiraMode ? '' : ((w.kanji && w.hira) ? w.hira : '');
 
-  if(mode==='kanji-arti'){
-    front = w.kanji || w.hira; frontSub = w.hira && w.kanji ? w.hira : '';
-    back = w.arti; backSub = w.romaji || '';
-  } else if(mode==='arti-kanji'){
-    front = w.arti; frontSub = '';
-    back = w.kanji || w.hira; backSub = w.hira && w.kanji ? w.hira : (w.romaji||'');
+  if(currentType === 'flashcard'){
+    flashcardEl.onclick = flipCard;
+    flashcardEl.style.cursor = 'pointer';
+    typingArea.style.display = 'none';
+    checkBtn.style.display = 'none';
+    fcControls.style.display = 'flex';
+    tapHint.style.display = 'block';
+
+    if(!flipped){
+      labelEl.textContent = 'SOAL';
+      mainEl.textContent = front;
+      subEl.textContent = frontSub;
+      contohEl.textContent = '';
+      tapHint.textContent = 'tap kartu untuk buka jawaban';
+    } else {
+      labelEl.textContent = 'JAWABAN';
+      mainEl.textContent = w.romaji || '-';
+      subEl.textContent = w.arti || '';
+      contohEl.textContent = w.contoh || '';
+      tapHint.textContent = 'tap lagi untuk kembali';
+    }
   } else {
-    front = w.hira || w.kanji; frontSub = '';
-    back = w.romaji || w.arti; backSub = w.romaji ? w.arti : '';
-  }
-
-  if(!flipped){
+    // mode ketik (romaji atau hiragana, tergantung currentType)
+    flashcardEl.onclick = null;
+    flashcardEl.style.cursor = 'default';
     labelEl.textContent = 'SOAL';
     mainEl.textContent = front;
     subEl.textContent = frontSub;
     contohEl.textContent = '';
-  } else {
-    labelEl.textContent = 'JAWABAN';
-    mainEl.textContent = back;
-    subEl.textContent = backSub;
-    contohEl.textContent = w.contoh || '';
+    tapHint.style.display = 'none';
+
+    typingArea.style.display = 'block';
+    typeInput.placeholder = isHiraMode ? 'Ketik dalam hiragana...' : 'Ketik dalam romaji...';
+    typeInput.value = '';
+    typeInput.disabled = false;
+    checkBtn.style.display = 'block';
+    fcControls.style.display = 'none';
+    typeInput.focus();
   }
 }
 
 function flipCard(){
-  if(deck.length===0) return;
+  if(currentType !== 'flashcard' || deck.length===0) return;
   flipped = !flipped;
   showCard();
 }
@@ -683,11 +684,11 @@ function markCard(know){
   if(real) real.status = know ? 'hafal' : 'ulang';
   save();
   updateStats();
-  advanceDeck(know); // know=true -> kata dibuang dari deck karena sudah hafal
+  advanceDeck(know); // know=true -> kata dibuang dari antrian karena sudah hafal
   showCard();
 }
 
-/* ---- mode ketik jawaban ---- */
+/* ---- mode ketik romaji ---- */
 function normalizeAnswer(s){
   return (s||'').toString().toLowerCase().trim()
     .replace(/\(.*?\)/g,'')
@@ -700,87 +701,55 @@ function answerMatches(userAns, target){
   return u.length>0 && alts.includes(u);
 }
 
-let lastTypingCorrect = false;
-
-function showTypingCard(){
-  const total = deck.length;
-  document.getElementById('fcProgress').textContent = total===0 ? '0 / 0' : `${deckPos+1} / ${total}`;
-  const mainEl = document.getElementById('typeMain');
-  const subEl = document.getElementById('typeSub');
-  const feedbackEl = document.getElementById('typeFeedback');
-  const inputEl = document.getElementById('typeInput');
-  const checkBtn = document.getElementById('typeCheckBtn');
-  const nextBtn = document.getElementById('typeNextBtn');
-
-  feedbackEl.innerHTML = '';
-  inputEl.value = '';
-  inputEl.disabled = false;
-  checkBtn.style.display = 'inline-flex';
-  nextBtn.style.display = 'none';
-
-  if(words.length===0){
-    mainEl.textContent = 'Belum ada kosakata';
-    subEl.textContent = 'Tambahkan dulu di tab Catatan';
-    inputEl.disabled = true; checkBtn.style.display='none';
-    return;
-  }
-  if(total===0){
-    mainEl.textContent = 'Semua kosakata sudah dihafal! 🎉';
-    subEl.textContent = 'Tambah kosakata baru di tab Catatan untuk lanjut latihan';
-    inputEl.disabled = true; checkBtn.style.display='none';
-    return;
-  }
-  const w = deck[deckPos];
-  const tm = currentTypeMode();
-  if(tm==='hira-arti'){
-    mainEl.textContent = w.hira;
-    subEl.textContent = w.kanji ? w.kanji : '';
-  } else {
-    mainEl.textContent = w.arti;
-    subEl.textContent = '';
-  }
-  inputEl.focus();
-}
-
 function checkTyping(){
   if(deck.length===0) return;
   const w = deck[deckPos];
-  const tm = currentTypeMode();
+  const isHiraMode = (currentType === 'typing-hira');
   const userAns = document.getElementById('typeInput').value;
-  const target = (tm==='hira-arti') ? w.arti : w.hira;
-
+  const target = isHiraMode ? w.hira : w.romaji;
   const isCorrect = answerMatches(userAns, target);
   lastTypingCorrect = isCorrect;
+
   const real = words.find(x=>x.id===w.id);
   if(real) real.status = isCorrect ? 'hafal' : 'ulang';
   save();
   updateStats();
 
   const feedbackEl = document.getElementById('typeFeedback');
-  if(isCorrect){
-    feedbackEl.innerHTML = '<span style="color:var(--indigo-deep);font-weight:700;">✓ Benar!</span>';
+  if(isHiraMode){
+    const romajiPart = w.romaji ? ` (${escapeHtml(w.romaji)})` : '';
+    if(isCorrect){
+      feedbackEl.innerHTML = `<span style="color:var(--indigo-deep);font-weight:700;">✓ Benar!</span><br>${escapeHtml(w.hira)}${romajiPart}`;
+    } else {
+      feedbackEl.innerHTML = `<span style="color:var(--hanko);font-weight:700;">✗ Kurang tepat.</span><br>Hiragana: <b>${escapeHtml(w.hira)}</b>${romajiPart}`;
+    }
   } else {
-    feedbackEl.innerHTML = `<span style="color:var(--hanko);font-weight:700;">✗ Kurang tepat.</span><br>Jawaban yang benar: <b>${escapeHtml(target)}</b>`;
+    if(isCorrect){
+      feedbackEl.innerHTML = `<span style="color:var(--indigo-deep);font-weight:700;">✓ Benar!</span><br>Arti: <b>${escapeHtml(w.arti || '-')}</b>`;
+    } else {
+      feedbackEl.innerHTML = `<span style="color:var(--hanko);font-weight:700;">✗ Kurang tepat.</span><br>Romaji: <b>${escapeHtml(w.romaji)}</b> — Arti: <b>${escapeHtml(w.arti || '-')}</b>`;
+    }
   }
   document.getElementById('typeInput').disabled = true;
-  document.getElementById('typeCheckBtn').style.display = 'none';
-  document.getElementById('typeNextBtn').style.display = 'block';
+  document.getElementById('checkBtn').style.display = 'none';
+  document.getElementById('nextBtn').style.display = 'block';
 }
 
-function nextTyping(){
+function goNext(){
   advanceDeck(lastTypingCorrect);
-  showTypingCard();
+  showCard();
 }
 
 document.getElementById('typeInput').addEventListener('keydown', (e)=>{
   if(e.key !== 'Enter') return;
-  const nextBtn = document.getElementById('typeNextBtn');
+  const nextBtn = document.getElementById('nextBtn');
   if(nextBtn.style.display === 'none'){
     checkTyping();
   } else {
-    nextTyping();
+    goNext();
   }
 });
+
 
 /* ---- starter pack: kosakata umum sehari-hari s.d. N4 ---- */
 const STARTER_PACK = [
